@@ -1,0 +1,4 @@
+.env
+auto_gpt_workspace/
+node_modules/
+package-lock.json
