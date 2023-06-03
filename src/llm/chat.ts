@@ -56,12 +56,20 @@ function generate_context(
   ];
 }
 
+/**
+ * Called from agent.ts when "thinking" (that is, asking the AI for a plan)
+ * @param agent 
+ * @param prompt 
+ * @param userInput 
+ * @param fullMessageHistory 
+ * @param tokenLimit 
+ * @returns 
+ */
 export async function chat_with_ai(
   agent: IAgent,
   prompt: string,
   userInput: string,
   fullMessageHistory: IChatMessage[],
-  permanentMemory: any,
   tokenLimit: number
 ): Promise<string> {
 
@@ -74,7 +82,7 @@ export async function chat_with_ai(
 
       let relevantMemory = "";
 
-      let [nextMessageToAddIndex, currentTokensUsed, insertionIndex, currentContext] =
+      let [nextMessageToAddIndex, currentTokensUsed, insertionIndex, messages_to_send] =
         generate_context(
           prompt,
           relevantMemory,
@@ -99,7 +107,7 @@ export async function chat_with_ai(
           break;
         }
 
-        currentContext.splice(
+        messages_to_send.splice(
           insertionIndex,
           0,
           fullMessageHistory[nextMessageToAddIndex]
@@ -112,7 +120,7 @@ export async function chat_with_ai(
 
       const [ newlyTrimmedMessages ] = get_newly_trimmed_messages(
         fullMessageHistory,
-        currentContext,
+        messages_to_send,
         agent.last_memory_index
       );
 
@@ -123,9 +131,9 @@ export async function chat_with_ai(
         agent.summary_memory,
         newlyTrimmedMessages
       );
-      currentContext.splice(insertionIndex, 0, agent.summary_memory);
+      messages_to_send.splice(insertionIndex, 0, agent.summary_memory);
 
-      console.log("chat_with_ai(): final context", currentContext);
+      console.log("chat_with_ai(): final context", messages_to_send);
 
       if (api_manager.getTotalBudget() > 0.0) {
         const remainingBudget =
@@ -144,23 +152,28 @@ export async function chat_with_ai(
           );
 
         logger.debug(systemMessage);
-        currentContext.push(create_chat_message("system", systemMessage));
+        messages_to_send.push(create_chat_message("system", systemMessage));
       }
 
-      currentContext.push(create_chat_message("user", userInput));
+      messages_to_send.push(create_chat_message("user", userInput));
 
-      const pluginCount = cfg.plugins.length;
-      for (let i = 0; i < pluginCount; i++) {
-        const plugin = cfg.plugins[i];
-        if (!plugin.can_handle_on_planning()) {
+      if(!agent.config.prompt_generator) {
+        throw new Error("Prompt generator not defined");
+    }
+
+      let queue_full = false;
+      // Plugins can add messages to the end of the message list.
+      for(const plugin of cfg.plugins) {
+        if (!plugin.on_planning) {
           continue;
         }
-        if(!agent.config.prompt_generator) {
-            throw new Error("Prompt generator not defined");
+        if( queue_full ) {
+          logger.debug("Skipping plugin because queue is full:", plugin.classname);
+          continue;
         }
-        const pluginResponse = plugin.on_planning(
+        const pluginResponse = await plugin.on_planning(
           agent.config.prompt_generator,
-          currentContext
+          messages_to_send
         );
         if (!pluginResponse || pluginResponse === "") {
           continue;
@@ -171,10 +184,10 @@ export async function chat_with_ai(
         );
         if (currentTokensUsed + tokensToAdd > sendTokenLimit) {
           logger.debug("Plugin response too long, skipping:", pluginResponse);
-          logger.debug("Plugins remaining at stop:", pluginCount - i);
-          break;
+          queue_full = true;
+        } else {
+          messages_to_send.push(create_chat_message("system", pluginResponse));
         }
-        currentContext.push(create_chat_message("system", pluginResponse));
       }
 
       const tokensRemaining = tokenLimit - currentTokensUsed;
@@ -182,7 +195,7 @@ export async function chat_with_ai(
       logger.debug(`Send Token Count: ${currentTokensUsed}`);
       logger.debug(`Tokens remaining for response: ${tokensRemaining}`);
       logger.debug("------------ CONTEXT SENT TO AI ---------------");
-      for (const message of currentContext) {
+      for (const message of messages_to_send) {
         if (
           message.role === "system" &&
           message.content === prompt
@@ -194,13 +207,13 @@ export async function chat_with_ai(
       }
       logger.debug("----------- END OF CONTEXT ----------------");
       logger.log_in_cycle_file(
-        currentContext,
+        messages_to_send,
         CURRENT_CONTEXT_FILE_NAME
       );
 
       const assistantReply = await llm_create_chat_completion(
         agent,
-        currentContext,
+        messages_to_send,
         model,
         undefined,
         tokensRemaining

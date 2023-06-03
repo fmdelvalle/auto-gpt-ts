@@ -3,7 +3,7 @@ import * as path from 'path';
 import { IRunParameters } from '../types';
 import Ajv from 'ajv';
 
-export function validate_json(config: IRunParameters, json_object: object, schema_name: string): object | null {
+export function validate_json(config: IRunParameters, json_object: object, schema_name: string): Record<string,any>|null {
     const schemaPath = path.join(__dirname, 'schemas', `${schema_name}.json`);
     const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
     const schema = JSON.parse(schemaContent);

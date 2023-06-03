@@ -51,5 +51,9 @@ export default class StackLogger implements ILogger {
         this.loggers.forEach(logger => logger.log_in_cycle_file && logger.log_in_cycle_file(data, filename));
     }
 
+    push(logger: Partial<ILogger>) {
+        this.loggers.push(logger);
+    }
+
   }
   

@@ -25,7 +25,7 @@ I'd appreciate suggestions, testing, bugfixes. You can create issues in GitHub f
 This is the first release, with just the core functions and maybe too much logging.
 
 ## Missing features 🐋
- * More commands, plugins interface
+ * More commands
  * More memory backends, if needed
  * TTS, and voice to text
  * Full .env support

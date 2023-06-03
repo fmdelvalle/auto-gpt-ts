@@ -65,12 +65,6 @@ function constructFullPrompt(cfg: IRunParameters, config: AIConfig, prompt_gener
     prompt_generator.goals = config.ai_goals;
     prompt_generator.name = config.ai_name;
     prompt_generator.role = config.ai_role;
-    for (const plugin of cfg.plugins) {
-        if( !plugin.can_handle_post_prompt() ) {
-            continue;
-        }
-        prompt_generator = plugin.post_prompt(prompt_generator as IPromptGenerator);
-    }
   }
 
   let full_prompt = `You are ${config.ai_name}, ${config.ai_role}\n${prompt_start}\n\nGOALS:\n\n`;

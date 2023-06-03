@@ -17,7 +17,7 @@ const JSON_SCHEMA = `
 }
 `;
 
-export function llm_fix_json_using_multiple_techniques(assistant_reply: string): any|false {
+export function llm_fix_json_using_multiple_techniques(assistant_reply: string): Object|Object[]|false {
     assistant_reply = assistant_reply.trim();
     if (assistant_reply.startsWith("```json")) {
         assistant_reply = assistant_reply.substring(7);

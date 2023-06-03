@@ -24,7 +24,7 @@ Agradecería sugerencias, pruebas y correcciones de errores. Puedes crear issues
 Esta es la primera versión, con solo las funciones principales y tal vez demasiados logs.
 
 ## Funciones faltantes 🐋
- * Más comandos, interfaz de plugins
+ * Más comandos
  * Más backends de memoria, si es necesario
  * TTS y voz a texto
  * Soporte completo de .env

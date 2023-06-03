@@ -1,5 +1,5 @@
-import { Env, ICliArguments, ICommandCategory, IRunParameters } from "../types";
-import getLatestBulletin, { markdownToAnsiStyle } from "./utils";
+import { Env, ICliArguments, ICommandCategory, IPlugin, IRunParameters } from "../types";
+import getLatestBulletin, { load_all_plugins, markdownToAnsiStyle } from "./utils";
 import * as Path from 'path';
 import { CommandRegistry } from "./command_registry";
 import { DEFAULT_TRIGGERING_PROMPT, construct_main_ai_config } from "./prompt";
@@ -10,7 +10,7 @@ import { ApiManager } from "../llm/api_manager";
 import { constructFullPrompt } from "./ai_config";
 import { buildAgent, start_interaction_loop } from "./agent";
 import { getTranslation } from "../i18n";
-
+import * as fs from 'fs';
 
 // @ts-ignore
 export async function run_auto_gpt( cfg: ICliArguments, env: Env ) {
@@ -59,7 +59,20 @@ export async function run_auto_gpt( cfg: ICliArguments, env: Env ) {
 
     const logger = await prepare_complete_logger( workspace_directory );
 
-    // Load plugins into cfg.plugins
+    // Load all plugins (some may be disabled in the config)
+    const all_plugins = await load_all_plugins(logger, t);
+
+    // Filter out plugins that are disabled in the config, or that are not enabled.
+    // Note: if allowlisted_plugins is set, only included plugins will be loaded. 
+    // Otherwise, all plugins will be loaded as long as they are not denylisted.
+    const enabled_plugins : IPlugin[] = all_plugins.filter((plugin) => {
+        if(env.allowlisted_plugins) {
+            return env.allowlisted_plugins.includes(plugin.classname);
+        } else if(env.denylisted_plugins) {
+            return !env.denylisted_plugins.includes(plugin.classname);
+        } 
+        return true;
+    });
 
     let run_cfg : IRunParameters = {
         ...env,
@@ -77,7 +90,19 @@ export async function run_auto_gpt( cfg: ICliArguments, env: Env ) {
         allow_downloads: cfg.allowDownloads
     };
 
+    // Load core commands
     await run_cfg.command_registry.import_all_commands( env, t );
+
+    // Plugins can add themselves as commands to the command registry. ChatGPT will have the option to call them.
+    await run_cfg.command_registry.add_plugin_commands( logger, t, enabled_plugins );
+
+    // They can also add extra loggers to the stack
+    for (const plugin of enabled_plugins) {
+        if(plugin.on_add_logger) {
+            logger.push( await plugin.on_add_logger() );
+            logger.info(t("plugin.logger_appended", {classname: plugin.classname} ));
+        }
+    }
 
     const ai_config = await construct_main_ai_config( run_cfg, logger, t );
 

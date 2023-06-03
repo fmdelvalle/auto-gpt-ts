@@ -45,7 +45,7 @@ export async function construct_main_ai_config(cfg: IRunParameters, logger: ILog
     logger.typewriter_log(t("prompt.goals"), Fore.GREEN, `${config.ai_goals}`);
     logger.typewriter_log(t("prompt.api_budget"), Fore.GREEN, config.api_budget <= 0 ? (t("infinite") as string) : `$${config.api_budget}`);
   } else if (config.ai_name) {
-    logger.typewriter_log("typewriter.welcome_back", Fore.GREEN, t("prompt.restore", {ai_name: config.ai_name}) as string, true);
+    logger.typewriter_log(t("typewriter.welcome_back"), Fore.GREEN, t("prompt.restore", {ai_name: config.ai_name}) as string, true);
     const should_continue = await clean_input(
         cfg,
       t("prompt.continue_with_last") + "\n" +

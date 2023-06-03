@@ -2,3 +2,5 @@
 auto_gpt_workspace/
 node_modules/
 package-lock.json
+data/
+ai_settings.yaml

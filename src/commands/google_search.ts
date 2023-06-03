@@ -79,7 +79,7 @@ const _commands : ICommand[] = [
         method: google_official_search,
         signature: '<query> <num_results>',
         enabled: () => (google_api && custom_search_engine_id) ? true : false,
-        categories: ['google_search'],
+        categories: ['internet_search'],
         returns: 'A list of hyperlinks'
     },
 ]

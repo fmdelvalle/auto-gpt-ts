@@ -167,13 +167,11 @@ export async function start_interaction_loop(agent: IAgent): Promise<void> {
 
         const spinner = new Spinner(t("agent.thinking") as string);
         spinner.start();
-        // Start spinner (TODO)
         const assistant_reply = await chat_with_ai(
             agent,
             agent.system_prompt,
             agent.triggering_prompt,
             agent.full_message_history,
-            agent.memory,
             cfg.llm.models.fast_token_limit
         ); // TODO: This hardcodes the model to use GPT3.5. Make this an argument
         spinner.stop();
@@ -181,24 +179,25 @@ export async function start_interaction_loop(agent: IAgent): Promise<void> {
         let assistant_reply_json = llm_fix_json_using_multiple_techniques (assistant_reply);
 
         for (const plugin of cfg.plugins) {
-            if (!plugin.can_handle_post_planning()) {
-                continue;
+            if (plugin.on_plan_received ) {
+                assistant_reply_json = await plugin.on_plan_received(assistant_reply_json);
             }
-            assistant_reply_json = plugin.post_planning(assistant_reply_json);
         }
 
         // Print Assistant thoughts
-        if (assistant_reply_json !== false) {
-            assistant_reply_json = validate_json(cfg, assistant_reply_json, LLM_DEFAULT_RESPONSE_FORMAT);
+        const validated_json = assistant_reply_json === false ? null : validate_json(cfg, assistant_reply_json, LLM_DEFAULT_RESPONSE_FORMAT);
 
+        if( validated_json === null ) {
+            logger.warn("Invalid JSON response from AI");
+        } else {
             try {
                 print_assistant_thoughts(
                     agent.logger,
                     agent.ai_name,
-                    assistant_reply_json,
+                    validated_json,
                     cfg.can_speak || false
                 );
-                [command_name, args] = get_command_from_response(assistant_reply_json);
+                [command_name, args] = get_command_from_response(validated_json);
 
                 if( command_name == 'Error') {
                     throw new Error( args['description']);
@@ -212,12 +211,11 @@ export async function start_interaction_loop(agent: IAgent): Promise<void> {
             } catch (e) {
                 logger.error("Error:\n", (e as Error).message);
             }
+            logger.log_in_cycle_file(
+                JSON.stringify(validated_json),
+                NEXT_ACTION_FILE_NAME
+            );
         }
-
-        logger.log_in_cycle_file(
-            assistant_reply_json,
-            NEXT_ACTION_FILE_NAME
-        );
 
         logger.typewriter_log(
             "NEXT ACTION: ",
@@ -241,11 +239,11 @@ export async function start_interaction_loop(agent: IAgent): Promise<void> {
                 if (console_input.toLowerCase().trim() === cfg.options.authorise_command_key) {
                     user_input = "GENERATE NEXT COMMAND JSON";
                     break;
-                } else if (console_input.toLowerCase().trim() === "s") {
+                } else if (console_input.toLowerCase().trim() === "s" && validated_json !== null) {
                     logger.typewriter_log(
                         t("agent.will_verify_answer") as string, Fore.GREEN, ""
                     );
-                    const thoughts = assistant_reply_json.thoughts || {};
+                    const thoughts = validated_json.thoughts || {};
                     const self_feedback_resp = await get_self_feedback( agent, thoughts, cfg.llm.models.fast_llm_model );
                     logger.typewriter_log( `SELF FEEDBACK: ${self_feedback_resp}`, Fore.YELLOW, "" );
                     user_input = self_feedback_resp;
@@ -303,11 +301,11 @@ export async function start_interaction_loop(agent: IAgent): Promise<void> {
         } else if (command_name === "self_feedback") {
             result = t("agent.self_feedback") + ` ${user_input}`;
         } else if( command_name !== null ) {
+            // Plugins have here an opportunity to modify the command
             for (const plugin of cfg.plugins) {
-                if (!plugin.can_handle_pre_command()) {
-                    continue;
+                if ( plugin.on_pre_command ) {
+                    [command_name, args] = await plugin.on_pre_command(agent, command_name, args);
                 }
-                [command_name, args] = plugin.pre_command(command_name, args);
             }
             const command_result = await execute_command(
                 agent,
@@ -330,10 +328,9 @@ export async function start_interaction_loop(agent: IAgent): Promise<void> {
             }
 
             for (const plugin of cfg.plugins) {
-                if (!plugin.can_handle_post_command()) {
-                    continue;
+                if( plugin.on_post_command && result !== null ) {
+                    result = await plugin.on_post_command(agent, command_name, result);
                 }
-                result = plugin.post_command(command_name, result);
             }
             if (agent.next_action_count > 0) {
                 agent.next_action_count -= 1;

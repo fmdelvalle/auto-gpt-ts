@@ -1,4 +1,4 @@
-import { Callable, Env, IAgent, ICommand, ICommandArgs, ICommandCategory, ICommandContext } from '../types';
+import { Callable, Env, IAgent, ICommand, ICommandArgs, ICommandCategory, ICommandContext, ILogger, IPlugin } from '../types';
 
 import path from 'path';
 import * as fs from 'fs';
@@ -101,7 +101,17 @@ export class CommandRegistry {
       }
     }
   }
-  
+
+  async add_plugin_commands(logger: ILogger, t: TFunction, plugins: IPlugin[] ): Promise<void> {
+    for( const plugin of plugins ) {
+      if( plugin.on_add_commands ) {
+        for( const command of plugin.on_add_commands() ) {
+          this.register(command);
+          logger.info(t("plugin.added_command", { classname: plugin.classname, command_name: command.name }))
+        }
+      }
+    }
+  }
 
   async import_commands(env: Env, module_name: ICommandCategory): Promise<void> {
     try {

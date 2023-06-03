@@ -100,7 +100,7 @@ class Workspace {
 
     for (const nullByte of Workspace.NULL_BYTES) {
       if (relative_path.includes(nullByte) || (root && root.toString().includes(nullByte))) {
-        throw new Error("embedded null byte");
+        throw new Error("embedded null byte in " + relative_path);
       }
     }
 

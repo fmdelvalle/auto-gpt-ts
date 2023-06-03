@@ -52,5 +52,8 @@
     "prompt.ai_role": "Enter the AI role:",
     "prompt.ai_goal": "Enter an AI goal (leave empty to finish):",
     "prompt.ai_goal_2": "Enter another AI goal (leave empty to finish):",
-    "prompt.ai_budget": "Enter the API budget (0.0 for infinite):"
+    "prompt.ai_budget": "Enter the API budget (0.0 for infinite):",
+    "plugin.logger_appended": "Appended logger from plugin {{classname}}",
+    "plugin.added_command": "Added command {{command_name}} from plugin {{classname}}",
+    "plugin.loaded": "Loaded plugin {{classname}}"
 }
