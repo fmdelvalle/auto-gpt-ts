@@ -20,8 +20,12 @@ También es posible que mejoremos algunas partes de la aplicación. El primer pa
 ahora arreglaré un poco la arquitectura para que sea más extensible y mantenible.
 Agradecería sugerencias, pruebas y correcciones de errores. Puedes crear issues en GitHub para ello.
 
-# 🚀 Lanzamiento v0.0.1 🚀
+# 🚀 Lanzamiento v0.1.0 🚀
 Esta es la primera versión, con solo las funciones principales y tal vez demasiados logs.
+
+# 🚀 Versión v0.2.0 🚀
+Esta versión incluye soporte a Lerna monorepo, y desacopla la consola del núcleo. Queremos proveer un 
+frontend para el navegador pronto.
 
 ## Funciones faltantes 🐋
  * Más comandos
@@ -34,3 +38,4 @@ Esta es la primera versión, con solo las funciones principales y tal vez demasi
  * Es asíncrono, por lo que es posible tener múltiples ejecuciones en el mismo hilo
  * Divisor en oraciones (sentencizer) más rápido
  * Multiidioma en proceso. Cada agente puede usar un idioma diferente.
+ * Núcleo y CLI desacoplados, por lo que puede usarse como un servicio de backend (en progreso).

@@ -1,6 +1,7 @@
 .env
-auto_gpt_workspace/
+auto_gpt_workspace/*
 node_modules/
 package-lock.json
-data/
+data/*
 ai_settings.yaml
+packages/*/node_modules

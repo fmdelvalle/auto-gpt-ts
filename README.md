@@ -29,10 +29,11 @@ thank all the <a href="https://github.com/Significant-Gravitas/Auto-GPT/graphs/c
 ## Quickstart
 
 0. Get an OpenAI [API Key](https://platform.openai.com/account/api-keys)
-1. Download the [latest release](https://github.com/fmdelvalle/auto-gpt-ts/releases/latest)
-2. Run 'npm install' (you'll need to have Node installed)
-3. Copy the .env.example file to .env, edit it, and fill in at least the OpenAI API key
-4. Run the app with 'npm start'
+1. Run 'npm install' (you'll need to have Node installed)
+2. Run 'npm run bootstrap'
+3. Run 'npm run build'
+4. Copy the .env.example file to .env, edit it, and fill in at least the OpenAI API key
+5. Run the app in console with 'npm run cli'
 
 ## 📖 Documentation
 * No documentation yet

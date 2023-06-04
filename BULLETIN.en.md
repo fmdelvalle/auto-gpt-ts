@@ -21,8 +21,12 @@ functionality to Typescript, now I'll fixing the architecture a bit to make it m
 and maintanable.
 I'd appreciate suggestions, testing, bugfixes. You can create issues in GitHub for that.
 
-# 🚀 v0.0.1 Release 🚀
+# 🚀 v0.1.0 Release 🚀
 This is the first release, with just the core functions and maybe too much logging.
+
+# 🚀 v0.2.0 Release 🚀
+This release includes Lerna monorepo support, and detaches CLI from core. We want to provide a browser
+frontend soon.
 
 ## Missing features 🐋
  * More commands
@@ -35,3 +39,4 @@ This is the first release, with just the core functions and maybe too much loggi
  * It is async, so it is possible to have multiple runners in the same thread
  * Faster sentencizer
  * Internationalization in progress. Language is set in a per-agent basis.
+ * Core detached from CLI, so it can also be used as a backend service (work in progress).

@@ -1,0 +1,26 @@
+{
+  "name": "@auto-gpt-ts/cli",
+  "version": "0.2.0",
+  "description": "",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "tsc -b ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@auto-gpt-ts/core": "*",
+    "@commander-js/extra-typings": "^10.0.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.2",
+    "@types/node": "^20.2.3",
+    "typescript": "^5.0.0",
+    "ts-jest": "^29.1.0",
+    "jest": "^29.5.0",
+    "isomorphic-git": "^1.24.0"
+  }
+}
